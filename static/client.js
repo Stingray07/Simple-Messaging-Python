@@ -5,17 +5,14 @@ const sign = document.getElementById("sign");
 const message = document.getElementById("message");
 const box = document.getElementById("box");
 
-const post_message = () => {
-  socket.once("response", (msg) => {
-    console.log("RECEIVED MESSAGE = " + JSON.stringify(msg));
-    const username = msg.username;
-    const message = msg.message;
-    const br = document.createElement("br");
-    const div = document.createElement("div");
-    div.innerText = username + ": " + message;
-    box.appendChild(div);
-    box.append(br);
-  });
+const post_message = (msg) => {
+  const username = msg.username;
+  const message = msg.message;
+  const br = document.createElement("br");
+  const div = document.createElement("div");
+  div.innerText = username + ": " + message;
+  box.appendChild(div);
+  box.append(br);
 };
 
 const post_request = (server, data, error_text) => {
@@ -46,12 +43,6 @@ const post_request = (server, data, error_text) => {
     .catch((error) => {
       console.log("Error: " + error);
     });
-};
-
-const add_text = (text) => {
-  const sh = document.createElement("p");
-  sh.innerText = text;
-  document.body.appendChild(sh);
 };
 
 if (window.location.href === "http://localhost:5000/") {
@@ -92,8 +83,13 @@ if (window.location.href === "http://localhost:5000/create_account") {
 }
 
 if (window.location.href === "http://localhost:5000/home") {
-  var socket = io();
-  console.log(document.cookie);
+  var socket = io.connect("http://localhost:5000/home");
+  socket.on("response", (msg) => {
+    if (msg.sender !== socket.id) {
+      console.log("RECEIVED MESSAGE = " + JSON.stringify(msg));
+      post_message(msg);
+    }
+  });
 
   message.addEventListener("keypress", (event) => {
     if (event.key === "Enter") {
@@ -105,7 +101,6 @@ if (window.location.href === "http://localhost:5000/home") {
         message: message.value,
       });
       message.value = "";
-      post_message();
     }
   });
 }

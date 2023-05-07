@@ -31,14 +31,19 @@ def home():
     return render_template('home.html')
 
 
-@socketio.on("putangina")
+@socketio.on("putangina", namespace='/home')
 def handle_message(data):
     print('Received message: ' + str(data))
-    emit('response', data)
+    emit('response', data, broadcast=True, namespace='/home')
 
 @socketio.on('my event')
 def event(json):
     print('received json: ' + str(json))
+
+@socketio.on('connect')
+def con():
+    print('Someone Connected')
+    
 
 @app.route('/create_account', methods=['POST', 'GET'])
 def create_account():
