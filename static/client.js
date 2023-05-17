@@ -1,9 +1,12 @@
-const username = document.getElementById("username");
+let username = document.getElementById("username");
 const password = document.getElementById("password");
 const button = document.getElementById("login");
 const sign = document.getElementById("sign");
 const message = document.getElementById("message");
 const box = document.getElementById("box");
+const username_for_room = document.getElementById("username_for_room");
+const room = document.getElementById("room");
+const room_button = document.getElementById("join_room_button");
 
 const post_message = (msg) => {
   const username = msg.username;
@@ -15,33 +18,25 @@ const post_message = (msg) => {
   box.append(br);
 };
 
-const post_request = (server, data, error_text) => {
+const post_request = (server, data) => {
   fetch(server, {
     method: "POST",
+    body: JSON.stringify({
+      username: data.username,
+      password: data.password,
+    }),
     headers: {
       "Content-Type": "application/json",
-      Accept: "text/html",
     },
-    body: JSON.stringify(data),
   })
-    .then((response) => {
-      if (response.ok) {
-        console.log(response.clone().json());
-        return response.json();
-      } else {
-        throw new Error("Error: " + response.status);
-      }
-    })
+    .then((response) => response.json())
     .then((data) => {
-      if (data.message === "Authorized") {
+      if (data.message === "Accept") {
         window.location.href = "http://localhost:5000/home";
-      } else {
-        add_text(data.message);
       }
-      console.log("Response: " + data.message);
     })
     .catch((error) => {
-      console.log("Error: " + error);
+      console.log(error);
     });
 };
 
@@ -64,6 +59,13 @@ if (window.location.href === "http://localhost:5000/") {
   sign.addEventListener("click", () => {
     window.location.href = "http://localhost:5000/create_account";
   });
+
+  room_button.addEventListener("click", () => {
+    const socket = io.connect("http://localhost:5000/");
+    socket.on("join", () => {
+      socket.emit("HAHAH");
+    });
+  });
 }
 
 if (window.location.href === "http://localhost:5000/create_account") {
@@ -83,6 +85,23 @@ if (window.location.href === "http://localhost:5000/create_account") {
 }
 
 if (window.location.href === "http://localhost:5000/home") {
+  fetch("http://localhost:5000/home", {
+    method: "POST",
+    body: JSON.stringify({
+      message: "get_username",
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      username = data.username;
+      console.log(username); // Log the data received from the server
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   var socket = io.connect("http://localhost:5000/home");
   socket.on("response", (msg) => {
     if (msg.sender !== socket.id) {
@@ -97,7 +116,7 @@ if (window.location.href === "http://localhost:5000/home") {
         return;
       }
       socket.emit("putangina", {
-        username: document.cookie,
+        username: username,
         message: message.value,
       });
       message.value = "";

@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit, send
+from flask import Flask, render_template, request, session, redirect, url_for
+from flask_socketio import SocketIO, emit
 import psycopg2
 
 
@@ -14,11 +14,11 @@ def hello():
         data = request.json
         username = data['username']
         password = data['password']
+        session['username'] = username
+        print('Username: ', session['username'])
         is_accessed = query(create_account=False, username=username, password=password)
         if is_accessed:
-            return {
-                'message': 'Authorized'
-            }
+            return {'message': 'Accept'}
         else:
             return {
                 'message': 'Credentials not in database'
@@ -28,6 +28,10 @@ def hello():
 
 @app.route('/home', methods=['POST', 'GET'])
 def home():
+    if request.method == "POST":
+        data = request.json
+        if data['message'] == 'get_username':
+            return {"username" : session['username']}
     return render_template('home.html')
 
 
@@ -40,10 +44,7 @@ def handle_message(data):
 def event(json):
     print('received json: ' + str(json))
 
-@socketio.on('connect')
-def con():
-    print('Someone Connected')
-    
+
 
 @app.route('/create_account', methods=['POST', 'GET'])
 def create_account():
