@@ -97,7 +97,7 @@ if (window.location.href === "http://localhost:5000/home") {
     .then((response) => response.json())
     .then((data) => {
       username = data.username;
-      console.log(username); // Log the data received from the server
+      console.log(username);
     })
     .catch((error) => {
       console.log(error);
@@ -115,7 +115,7 @@ if (window.location.href === "http://localhost:5000/home") {
       if (message.value === "") {
         return;
       }
-      socket.emit("putangina", {
+      socket.emit("message_socket", {
         username: username,
         message: message.value,
       });
